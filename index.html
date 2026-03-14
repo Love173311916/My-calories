@@ -342,9 +342,42 @@ const DB=[
   {n:"Flaxseeds",e:"🌱",cal:534,p:18,c:29,f:42},
 ];
 
-let meals=[],history=[],goals={cal:2000,prot:150,carb:200,fat:65};
-let selFood=null,inputUnit='g',displayUnit='g',energyUnit='kcal',isDark=false;
 const UF={g:1,oz:28.3495,lb:453.592};
+
+// ── PERSISTENCE ───────────────────────────────────────────────────────
+function loadState(){
+  try{
+    const today=new Date().toISOString().slice(0,10);
+    const saved=JSON.parse(localStorage.getItem('caltrack_v1')||'{}');
+    // if saved meals are from a different day, archive them first then start fresh
+    if(saved.mealsDate && saved.mealsDate!==today && saved.meals && saved.meals.length){
+      const hist=saved.history||[];
+      const idx=hist.findIndex(h=>h.date===saved.mealsDate);
+      const entry={date:saved.mealsDate,meals:saved.meals,totalCal:saved.meals.reduce((s,m)=>s+m.cal,0)};
+      if(idx>=0)hist[idx]=entry; else hist.unshift(entry);
+      saved.history=hist.slice(0,60);
+      saved.meals=[];
+    }
+    return {
+      meals: saved.meals||[],
+      history: saved.history||[],
+      goals: saved.goals||{cal:2000,prot:150,carb:200,fat:65},
+      displayUnit: saved.displayUnit||'g',
+      energyUnit: saved.energyUnit||'kcal',
+      isDark: saved.isDark||false,
+      mealsDate: today,
+    };
+  }catch(e){return {meals:[],history:[],goals:{cal:2000,prot:150,carb:200,fat:65},displayUnit:'g',energyUnit:'kcal',isDark:false,mealsDate:new Date().toISOString().slice(0,10)};}
+}
+function persist(){
+  try{
+    localStorage.setItem('caltrack_v1',JSON.stringify({meals,history,goals,displayUnit,energyUnit,isDark,mealsDate:todayStr()}));
+  }catch(e){}
+}
+
+const _s=loadState();
+let meals=_s.meals, history=_s.history, goals=_s.goals;
+let selFood=null, inputUnit='g', displayUnit=_s.displayUnit, energyUnit=_s.energyUnit, isDark=_s.isDark;
 
 function toG(v,u){return parseFloat(v)*UF[u];}
 function c100(val,g){return Math.round(val*g/100*10)/10;}
@@ -363,6 +396,7 @@ function toggleTheme(){
   document.documentElement.setAttribute('data-theme',isDark?'dark':'');
   document.getElementById('theme-btn').textContent=isDark?'☀️':'🌙';
   document.getElementById('theme-meta').content=isDark?'#0f0f11':'#f5f5f0';
+  persist();
 }
 
 function gotoPage(p,btn,title){
@@ -416,14 +450,14 @@ function addMeal(){
   if(!v||v<=0){toast('Enter a valid amount');return;}
   const g=toG(v,inputUnit);
   meals.push({name:selFood.n,emoji:selFood.e,grams:g,inputAmt:v,inputUnit,cal:c100(selFood.cal,g),p:c100(selFood.p,g),c:c100(selFood.c,g),f:c100(selFood.f,g),time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
-  updateToday();saveToHistory();
+  updateToday();saveToHistory();persist();
   document.getElementById('food-search').value='';
   document.getElementById('amt-inp').value='';
   document.getElementById('sel-card').style.display='none';
   document.getElementById('preview-bar').style.display='none';
   selFood=null;toast('Added ✓');
 }
-function removeMeal(i){meals.splice(i,1);updateToday();saveToHistory();}
+function removeMeal(i){meals.splice(i,1);updateToday();saveToHistory();persist();}
 
 function updateToday(){
   const tot={cal:0,p:0,c:0,f:0};
@@ -528,17 +562,17 @@ function saveGoals(){
   goals.prot=parseInt(document.getElementById('g-prot').value)||150;
   goals.carb=parseInt(document.getElementById('g-carb').value)||200;
   goals.fat=parseInt(document.getElementById('g-fat').value)||65;
-  updateToday();toast('Goals saved ✓');
+  updateToday();persist();toast('Goals saved ✓');
 }
 function setDU(u){
   displayUnit=u;
   ['g','oz','lb'].forEach(x=>document.getElementById('sw-'+x).classList.toggle('active',x===u));
-  updateToday();
+  updateToday();persist();
 }
 function setEU(u){
   energyUnit=u;
   ['kcal','kj'].forEach(x=>document.getElementById('se-'+x).classList.toggle('active',x===u));
-  updateToday();
+  updateToday();persist();
 }
 
 function toast(msg){
@@ -550,6 +584,19 @@ function toast(msg){
 document.getElementById('content').addEventListener('scroll',function(){
   document.getElementById('topbar').classList.toggle('scrolled',this.scrollTop>4);
 });
+
+// restore UI state from saved settings
+if(isDark){
+  document.documentElement.setAttribute('data-theme','dark');
+  document.getElementById('theme-btn').textContent='☀️';
+  document.getElementById('theme-meta').content='#0f0f11';
+}
+['g','oz','lb'].forEach(x=>document.getElementById('sw-'+x).classList.toggle('active',x===displayUnit));
+['kcal','kj'].forEach(x=>document.getElementById('se-'+x).classList.toggle('active',x===energyUnit));
+document.getElementById('g-cal').value=goals.cal;
+document.getElementById('g-prot').value=goals.prot;
+document.getElementById('g-carb').value=goals.carb;
+document.getElementById('g-fat').value=goals.fat;
 
 updateToday();
 </script>
