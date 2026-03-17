@@ -114,6 +114,19 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;min-height
 .preview-bar{background:rgba(37,99,235,0.08);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;color:var(--accent);font-weight:500;text-align:center;margin-bottom:10px;display:none;}
 .add-btn{width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.1s;}
 .add-btn:active{opacity:0.85;}
+/* MODE TOGGLE */
+.mode-toggle{display:flex;background:var(--card);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow);}
+.mode-btn{flex:1;padding:11px 8px;background:none;border:none;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;color:var(--text2);transition:all 0.2s;border-bottom:2px solid transparent;}
+.mode-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--card2);}
+/* MANUAL FORM */
+.manual-card{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);}
+.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.mf-row.full{grid-template-columns:1fr;}
+.mf-group{display:flex;flex-direction:column;gap:4px;}
+.mf-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:0.4px;text-transform:uppercase;}
+.mf-inp{padding:10px 12px;background:var(--bg2);border:none;border-radius:var(--radius-sm);font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:100%;}
+.mf-inp:focus{box-shadow:0 0 0 2px var(--accent);}
+.mf-total{background:rgba(37,99,235,0.07);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--accent);font-weight:500;text-align:center;margin-bottom:10px;display:none;}
 
 /* HISTORY */
 .week-box{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
@@ -211,30 +224,79 @@ body{display:flex;flex-direction:column;max-width:430px;margin:0 auto;min-height
 
   <!-- LOG -->
   <div class="page" id="page-log">
-    <div class="search-box">
-      <span style="font-size:15px;color:var(--text3)">🔍</span>
-      <input type="text" id="food-search" placeholder="Search food (chicken, rice, banana…)" autocomplete="off" oninput="onSearch()" onblur="setTimeout(closeDD,200)">
+
+    <!-- mode toggle -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mmode-search" onclick="setLogMode('search')">🔍 Search food</button>
+      <button class="mode-btn" id="mmode-manual" onclick="setLogMode('manual')">✏️ Enter manually</button>
     </div>
-    <div class="dd-list" id="dd-list"></div>
-    <div class="sel-card" id="sel-card">
-      <div class="sel-food-name" id="sel-name"></div>
-      <div class="chips" id="sel-chips"></div>
-      <div class="amt-row">
-        <input class="amt-inp" type="number" id="amt-inp" placeholder="Amount…" min="1" oninput="updatePreview()">
-        <div class="useg">
-          <button class="useg-btn active" id="ub-g" onclick="setIU('g')">g</button>
-          <button class="useg-btn" id="ub-oz" onclick="setIU('oz')">oz</button>
-          <button class="useg-btn" id="ub-lb" onclick="setIU('lb')">lb</button>
-          <button class="useg-btn" id="ub-pcs" onclick="setIU('pcs')" style="display:none">pcs</button>
-        </div>
+
+    <!-- SEARCH MODE -->
+    <div id="log-search-mode">
+      <div class="search-box">
+        <span style="font-size:15px;color:var(--text3)">🔍</span>
+        <input type="text" id="food-search" placeholder="Search food (chicken, rice, banana…)" autocomplete="off" oninput="onSearch()" onblur="setTimeout(closeDD,200)">
       </div>
-      <div class="preview-bar" id="preview-bar"></div>
-      <button class="add-btn" onclick="addMeal()">Add to log</button>
+      <div class="dd-list" id="dd-list"></div>
+      <div class="sel-card" id="sel-card">
+        <div class="sel-food-name" id="sel-name"></div>
+        <div class="chips" id="sel-chips"></div>
+        <div class="amt-row">
+          <input class="amt-inp" type="number" id="amt-inp" placeholder="Amount…" min="1" oninput="updatePreview()">
+          <div class="useg">
+            <button class="useg-btn active" id="ub-g" onclick="setIU('g')">g</button>
+            <button class="useg-btn" id="ub-oz" onclick="setIU('oz')">oz</button>
+            <button class="useg-btn" id="ub-lb" onclick="setIU('lb')">lb</button>
+            <button class="useg-btn" id="ub-pcs" onclick="setIU('pcs')" style="display:none">pcs</button>
+          </div>
+        </div>
+        <div class="preview-bar" id="preview-bar"></div>
+        <button class="add-btn" onclick="addMeal()">Add to log</button>
+      </div>
+      <div class="card" style="padding:14px;color:var(--text2);font-size:13px;line-height:1.65;">
+        <strong style="color:var(--text);font-size:13px;">How it works</strong><br>
+        Search any food → select → enter amount in g, oz, lb, or pieces → calories and macros are calculated automatically. The "pcs" button appears when a food has a known piece weight (e.g. 1 egg, 1 banana).
+      </div>
     </div>
-    <div class="card" style="padding:14px;color:var(--text2);font-size:13px;line-height:1.65;">
-      <strong style="color:var(--text);font-size:13px;">How it works</strong><br>
-      Search any food → select → enter amount in g, oz, lb, or pieces → calories and macros are calculated automatically. The "pcs" button appears when a food has a known piece weight (e.g. 1 egg, 1 banana).
+
+    <!-- MANUAL MODE -->
+    <div id="log-manual-mode" style="display:none">
+      <div class="manual-card">
+        <div class="mf-row full">
+          <div class="mf-group">
+            <span class="mf-label">Food name</span>
+            <input class="mf-inp" type="text" id="mf-name" placeholder="e.g. Home-cooked pasta" oninput="updateManualTotal()">
+          </div>
+        </div>
+        <div class="mf-row">
+          <div class="mf-group">
+            <span class="mf-label">Calories (kcal)</span>
+            <input class="mf-inp" type="number" id="mf-cal" placeholder="0" min="0" oninput="updateManualTotal()">
+          </div>
+          <div class="mf-group">
+            <span class="mf-label">Protein (g)</span>
+            <input class="mf-inp" type="number" id="mf-prot" placeholder="0" min="0" oninput="updateManualTotal()">
+          </div>
+        </div>
+        <div class="mf-row">
+          <div class="mf-group">
+            <span class="mf-label">Carbs (g)</span>
+            <input class="mf-inp" type="number" id="mf-carb" placeholder="0" min="0" oninput="updateManualTotal()">
+          </div>
+          <div class="mf-group">
+            <span class="mf-label">Fat (g)</span>
+            <input class="mf-inp" type="number" id="mf-fat" placeholder="0" min="0" oninput="updateManualTotal()">
+          </div>
+        </div>
+        <div class="mf-total" id="mf-total"></div>
+        <button class="add-btn" onclick="addManualMeal()">Add to log</button>
+      </div>
+      <div class="card" style="padding:14px;color:var(--text2);font-size:13px;line-height:1.65;">
+        <strong style="color:var(--text);font-size:13px;">When to use this</strong><br>
+        Use manual entry when you already know the nutrition info — like from a food label, restaurant menu, or recipe app. Just type the name and numbers and hit Add.
+      </div>
     </div>
+
     <div class="gap"></div>
   </div>
 
@@ -387,6 +449,7 @@ function toG(v,u){
 }
 function c100(val,g){return Math.round(val*g/100*10)/10;}
 function fmtW(g, m){
+  if(m&&m.inputUnit==='manual') return 'manual entry';
   if(m&&m.inputUnit==='pcs') return m.inputAmt+(m.inputAmt===1?' pc':' pcs')+' ('+Math.round(g)+'g)';
   if(displayUnit==='oz')return (g/28.3495).toFixed(1)+'oz';
   if(displayUnit==='lb')return (g/453.592).toFixed(2)+'lb';
@@ -473,6 +536,48 @@ function addMeal(){
   selFood=null;toast('Added ✓');
 }
 function removeMeal(i){meals.splice(i,1);updateToday();saveToHistory();persist();}
+
+function setLogMode(mode){
+  document.getElementById('log-search-mode').style.display=mode==='search'?'':'none';
+  document.getElementById('log-manual-mode').style.display=mode==='manual'?'':'none';
+  document.getElementById('mmode-search').classList.toggle('active',mode==='search');
+  document.getElementById('mmode-manual').classList.toggle('active',mode==='manual');
+}
+
+function updateManualTotal(){
+  const cal=parseFloat(document.getElementById('mf-cal').value)||0;
+  const p=parseFloat(document.getElementById('mf-prot').value)||0;
+  const c=parseFloat(document.getElementById('mf-carb').value)||0;
+  const f=parseFloat(document.getElementById('mf-fat').value)||0;
+  const el=document.getElementById('mf-total');
+  if(!cal&&!p&&!c&&!f){el.style.display='none';return;}
+  el.style.display='block';
+  el.textContent=`${fmtE(cal)} · P:${p}g · C:${c}g · F:${f}g`;
+}
+
+function addManualMeal(){
+  const name=document.getElementById('mf-name').value.trim();
+  const cal=parseFloat(document.getElementById('mf-cal').value)||0;
+  const p=parseFloat(document.getElementById('mf-prot').value)||0;
+  const c=parseFloat(document.getElementById('mf-carb').value)||0;
+  const f=parseFloat(document.getElementById('mf-fat').value)||0;
+  if(!name){toast('Enter a food name');return;}
+  if(!cal&&!p&&!c&&!f){toast('Enter at least one value');return;}
+  meals.push({
+    name, emoji:'📝', grams:0,
+    inputAmt:0, inputUnit:'manual',
+    cal, p, c, f,
+    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})
+  });
+  updateToday();saveToHistory();persist();
+  document.getElementById('mf-name').value='';
+  document.getElementById('mf-cal').value='';
+  document.getElementById('mf-prot').value='';
+  document.getElementById('mf-carb').value='';
+  document.getElementById('mf-fat').value='';
+  document.getElementById('mf-total').style.display='none';
+  toast('Added ✓');
+}
 
 function updateToday(){
   const tot={cal:0,p:0,c:0,f:0};
